@@ -1,5 +1,10 @@
 
 cmake_minimum_required (VERSION 2.8)
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif (POLICY CMP0048)
+
+project(cryptoTools VERSION 1.3.0)
 
 project(libOTe)
 
@@ -12,16 +17,22 @@ if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
 	if(${CMAKE_VERSION} VERSION_LESS "3.12.0") 
 		message("Please consider updating CMake to 3.12+")
 	endif()
-
-	set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin)
-	set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib)
-	set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib)
-
+	
 	############################################
 	#           Flag and #defines              #
 	############################################
 	add_definitions(-DSOLUTION_DIR='${CMAKE_SOURCE_DIR}')
-	set(COMMON_FLAGS "-Wall -march=native -Wfatal-errors ")
+	if(MSVC)
+
+
+	else()
+		set(COMMON_FLAGS "-Wall -march=native -Wfatal-errors")
+		SET(CMAKE_CXX_FLAGS_RELEASE "-O3  -DNDEBUG") 
+		SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -O2 -g -ggdb -rdynamic")
+		SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g -ggdb -rdynamic")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=c++17")
+	endif()
+
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COMMON_FLAGS}")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
 	
@@ -30,11 +41,6 @@ if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
 	# -std=c++14
 	# -fPIC -no-pie 
 
-	# Select flags.
-	SET(CMAKE_CXX_FLAGS_RELEASE "-O3  -DNDEBUG") 
-	SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -O2 -g -ggdb -rdynamic")
-	SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g -ggdb -rdynamic")
-	
 
 	############################################
 	#           Build mode checks              #
@@ -146,7 +152,7 @@ if( NOT ENABLE_ALL_OT AND
 	NOT ENABLE_SIMPLESTOT_ASM AND 
 	NOT ENABLE_MR AND 
 	NOT ENABLE_MR_KYBER AND 
-	NOT ENABLE_NP)
+	NOT ENABLE_NP) 
 	message(WARNING "NO Base OT enabled.")
 endif()
 
@@ -157,18 +163,11 @@ endif()
 if ((ENABLE_SIMPLESTOT OR ENABLE_MR OR ENABLE_NP) AND
    NOT (ENABLE_MIRACL OR ENABLE_RELIC))
    message(FATAL_ERROR "ENABLE_SIMPLESTOT and ENABLE_MR requires ENABLE_MIRACL or ENABLE_RELIC")
-endif()
-
-if(ENABLE_SSE)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} $   -maes -msse2 -msse3 -msse4.1 -mpclmul  ")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes -msse2 -msse3 -msse4.1 -mpclmul  ")
-endif()
-
+endif() 
 
 configure_file(libOTe/config.h.in libOTe/config.h)
-
 # Support out-of-source builds.
-include_directories(${CMAKE_BINARY_DIR})
+# include_directories(${CMAKE_BINARY_DIR})
 
 
 #############################################
